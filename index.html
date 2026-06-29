@@ -1,0 +1,603 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Calculadora de Lotes — Chácaras dos Jacarandás</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Inter:wght@300;400;500;600;700&display=swap');
+
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+:root{
+  --verde:       #1B5E20;
+  --verde-meio:  #2E7D32;
+  --verde-claro: #43A047;
+  --folha:       #A5D6A7;
+  --ouro:        #C9A84C;
+  --ouro-claro:  #FFF8E1;
+  --ouro-vivo:   #F0D080;
+  --creme:       #F9F9F4;
+  --bege:        #F0EDE4;
+  --texto:       #1A1A1A;
+  --cinza:       #6B6B6B;
+  --borda:       #D8D8D0;
+  --azul:        #1565C0;
+  --azul-claro:  #E3F2FD;
+}
+
+html,body{min-height:100vh;background:var(--creme);font-family:'Inter',sans-serif;color:var(--texto)}
+
+/* ── HEADER ── */
+.header{
+  background:linear-gradient(150deg,#0d2e0f 0%,var(--verde) 60%,var(--verde-meio) 100%);
+  padding:32px 24px 0;
+  position:relative;overflow:hidden;
+}
+.header::after{
+  content:'';position:absolute;bottom:0;left:0;right:0;height:40px;
+  background:var(--creme);
+  clip-path:ellipse(55% 100% at 50% 100%);
+}
+.header-tag{
+  display:inline-block;font-size:10px;font-weight:700;letter-spacing:3px;
+  text-transform:uppercase;color:var(--ouro-vivo);
+  border:1px solid var(--ouro);border-radius:2px;padding:3px 10px;margin-bottom:14px;
+}
+.header h1{
+  font-family:'Playfair Display',serif;font-size:clamp(22px,5vw,40px);
+  font-weight:900;color:#fff;line-height:1.1;margin-bottom:6px;
+}
+.header h1 em{color:var(--ouro-vivo);font-style:normal}
+.header-sub{font-size:13px;color:rgba(255,255,255,0.65);margin-bottom:28px}
+.header-pills{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:44px}
+.pill{background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);
+  border-radius:100px;padding:5px 14px;font-size:11px;color:rgba(255,255,255,0.9);font-weight:500}
+.pill strong{color:var(--ouro-vivo)}
+
+/* ── MAIN ── */
+.main{padding:24px 20px 60px;max-width:720px;margin:0 auto}
+
+/* ── CARD ── */
+.card{
+  background:#fff;border-radius:16px;
+  box-shadow:0 2px 20px rgba(0,0,0,0.07);
+  margin-bottom:20px;overflow:hidden;
+}
+.card-header{
+  background:var(--verde);padding:16px 20px;
+  display:flex;align-items:center;gap:10px;
+}
+.card-header .icon{font-size:18px}
+.card-header h2{font-size:14px;font-weight:700;color:#fff;letter-spacing:0.3px}
+.card-body{padding:20px}
+
+/* ── SELECTS ── */
+.row-2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.field label{display:block;font-size:11px;font-weight:700;letter-spacing:1px;
+  text-transform:uppercase;color:var(--cinza);margin-bottom:6px}
+.field select,.field input{
+  width:100%;padding:12px 14px;border:1.5px solid var(--borda);border-radius:10px;
+  font-family:'Inter',sans-serif;font-size:14px;background:#fff;color:var(--texto);
+  appearance:none;-webkit-appearance:none;outline:none;transition:border-color 0.2s;
+}
+.field select:focus,.field input:focus{border-color:var(--verde)}
+.select-wrap{position:relative}
+.select-wrap::after{
+  content:'▾';position:absolute;right:14px;top:50%;transform:translateY(-50%);
+  color:var(--cinza);pointer-events:none;font-size:14px;
+}
+
+/* ── LOTE INFO ── */
+.lote-info{
+  display:none;
+  background:var(--bege);border-radius:12px;padding:16px;margin-top:16px;
+  border-left:4px solid var(--verde);
+}
+.lote-info.visible{display:flex;flex-wrap:wrap;gap:16px}
+.info-item{flex:1;min-width:120px}
+.info-item .lbl{font-size:10px;font-weight:700;letter-spacing:1px;
+  text-transform:uppercase;color:var(--cinza);margin-bottom:3px}
+.info-item .val{font-size:18px;font-weight:700;color:var(--verde)}
+.info-item .val.ouro{color:var(--ouro)}
+
+/* ── ENTRADA ── */
+.entrada-wrap{position:relative;margin-top:4px}
+.entrada-wrap .prefix{
+  position:absolute;left:14px;top:50%;transform:translateY(-50%);
+  font-size:14px;font-weight:600;color:var(--cinza);
+}
+.entrada-wrap input{padding-left:44px}
+.entrada-hint{font-size:11px;color:var(--cinza);margin-top:6px}
+.entrada-hint span{color:var(--verde);font-weight:600}
+.entrada-erro{font-size:11px;color:#C62828;margin-top:6px;display:none}
+.entrada-erro.visible{display:block}
+
+/* ── DESCONTO BADGE ── */
+.desconto-badge{
+  display:none;
+  background:var(--ouro-claro);border:1px solid var(--ouro);
+  border-radius:10px;padding:12px 16px;margin-top:12px;
+  align-items:center;gap:10px;
+}
+.desconto-badge.visible{display:flex}
+.desconto-badge .icon{font-size:20px}
+.desconto-badge .txt{font-size:13px;color:var(--texto)}
+.desconto-badge .txt strong{color:var(--verde);font-size:15px}
+
+/* ── AVISTA BADGE ── */
+.avista-badge{
+  display:none;
+  background:#E8F5E9;border:1px solid var(--verde-claro);
+  border-radius:10px;padding:12px 16px;margin-top:12px;
+  align-items:center;gap:10px;
+}
+.avista-badge.visible{display:flex}
+.avista-badge .icon{font-size:20px}
+.avista-badge .txt{font-size:13px;color:var(--verde);font-weight:600}
+
+/* ── RESULTADO ── */
+.resultado{display:none}
+.resultado.visible{display:block}
+
+.avista-card{
+  background:linear-gradient(135deg,var(--verde) 0%,var(--verde-claro) 100%);
+  border-radius:14px;padding:20px;margin-bottom:16px;
+  display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;
+}
+.avista-card .lbl{font-size:11px;font-weight:700;letter-spacing:2px;
+  text-transform:uppercase;color:rgba(255,255,255,0.7)}
+.avista-card .preco{font-family:'Playfair Display',serif;font-size:28px;
+  font-weight:900;color:#fff}
+.avista-card .economia{font-size:12px;color:var(--ouro-vivo);font-weight:600;
+  background:rgba(0,0,0,0.2);border-radius:100px;padding:4px 12px}
+
+/* ── GRID DE PRAZOS ── */
+.prazos-title{font-size:12px;font-weight:700;letter-spacing:1px;
+  text-transform:uppercase;color:var(--cinza);margin-bottom:12px}
+.prazos-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+@media(max-width:480px){.prazos-grid{grid-template-columns:repeat(2,1fr)}}
+
+.prazo-card{
+  border-radius:12px;padding:14px 12px;text-align:center;
+  border:1.5px solid var(--borda);background:#fff;
+  transition:transform 0.15s,box-shadow 0.15s,border-color 0.15s;
+  cursor:default;
+}
+.prazo-card:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(0,0,0,0.1)}
+.prazo-card.destaque{border-color:var(--verde);background:var(--bege)}
+.prazo-card .meses{font-size:11px;font-weight:700;letter-spacing:1px;
+  text-transform:uppercase;color:var(--cinza);margin-bottom:6px}
+.prazo-card .parcela{font-family:'Playfair Display',serif;font-size:20px;
+  font-weight:700;color:var(--azul);line-height:1}
+.prazo-card.destaque .parcela{color:var(--verde)}
+.prazo-card .total{font-size:10px;color:var(--cinza);margin-top:4px}
+.prazo-card .economia-prazo{font-size:10px;color:var(--verde);font-weight:600;margin-top:3px}
+
+/* ── NOTA ── */
+.nota-final{
+  background:#F7FAF7;border-left:3px solid var(--folha);
+  border-radius:0 8px 8px 0;padding:12px 16px;margin-top:16px;
+  font-size:11px;color:var(--cinza);line-height:1.7;
+}
+
+/* ── FOOTER ── */
+.footer{
+  background:var(--verde);padding:20px 24px;text-align:center;
+  font-size:11px;color:rgba(255,255,255,0.6);
+}
+.footer strong{color:var(--ouro-vivo)}
+
+/* ── ESTADO VAZIO ── */
+.empty-state{
+  text-align:center;padding:32px 20px;color:var(--cinza);
+}
+.empty-state .icon{font-size:40px;margin-bottom:10px}
+.empty-state p{font-size:13px}
+
+/* ── BADGE SITUAÇÃO ── */
+.badge{display:inline-block;font-size:10px;font-weight:700;
+  border-radius:100px;padding:2px 10px;letter-spacing:0.5px}
+.badge.especial{background:#FFF9C4;color:#856404}
+.badge.padrao{background:#E8F5E9;color:#1B5E20}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+  <div class="header-tag">Simulador Oficial · Lançamento</div>
+  <h1>Chácaras de Recreio<br><em>dos Jacarandás</em></h1>
+  <p class="header-sub">Calculadora de condições de pagamento · Angatuba / SP</p>
+  <div class="header-pills">
+    <div class="pill">🌿 <strong>98 lotes</strong> disponíveis</div>
+    <div class="pill">📐 A partir de <strong>1.000 m²</strong></div>
+    <div class="pill">💰 Entrada a partir de <strong>R$ 25.000</strong></div>
+    <div class="pill">📋 Decreto <strong>676/2022</strong></div>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+
+  <!-- SELEÇÃO DE LOTE -->
+  <div class="card">
+    <div class="card-header">
+      <span class="icon">🗺️</span>
+      <h2>Selecione o Lote</h2>
+    </div>
+    <div class="card-body">
+      <div class="row-2">
+        <div class="field">
+          <label>Quadra</label>
+          <div class="select-wrap">
+            <select id="sel-quadra" onchange="onQuadra()">
+              <option value="">— Quadra —</option>
+              <option value="A">A</option><option value="B">B</option><option value="C">C</option>
+              <option value="D">D</option><option value="E">E</option><option value="F">F</option><option value="G">G</option>
+            </select>
+          </div>
+        </div>
+        <div class="field">
+          <label>Lote</label>
+          <div class="select-wrap">
+            <select id="sel-lote" onchange="onLote()" disabled>
+              <option value="">— Lote —</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- Info do lote -->
+      <div class="lote-info" id="lote-info">
+        <div class="info-item">
+          <div class="lbl">Área</div>
+          <div class="val" id="info-area">—</div>
+        </div>
+        <div class="info-item">
+          <div class="lbl">Frente</div>
+          <div class="val" id="info-frente">—</div>
+        </div>
+        <div class="info-item">
+          <div class="lbl">Situação</div>
+          <div class="val" id="info-sit">—</div>
+        </div>
+        <div class="info-item">
+          <div class="lbl">Preço à Vista</div>
+          <div class="val ouro" id="info-av">—</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ENTRADA -->
+  <div class="card">
+    <div class="card-header">
+      <span class="icon">💵</span>
+      <h2>Valor de Entrada</h2>
+    </div>
+    <div class="card-body">
+      <div class="field">
+        <label>Entrada</label>
+        <div class="entrada-wrap">
+          <span class="prefix">R$</span>
+          <input type="number" id="inp-entrada" placeholder="25.000" min="25000" step="1000"
+                 oninput="calcular()" disabled>
+        </div>
+        <p class="entrada-hint" id="hint-entrada">Selecione um lote para continuar</p>
+        <p class="entrada-erro" id="erro-entrada">⚠ Valor fora do intervalo permitido</p>
+      </div>
+
+      <!-- Desconto badge -->
+      <div class="desconto-badge" id="desconto-badge">
+        <span class="icon">🎁</span>
+        <div class="txt">Você tem direito a <strong id="desc-val">—</strong> de desconto nos juros</div>
+      </div>
+
+      <!-- Avista badge -->
+      <div class="avista-badge" id="avista-badge">
+        <span class="icon">✅</span>
+        <div class="txt">Pagamento à vista — melhor condição disponível!</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RESULTADO -->
+  <div class="resultado" id="resultado">
+
+    <!-- À vista -->
+    <div class="avista-card">
+      <div>
+        <div class="lbl">🏆 Pagamento à Vista</div>
+        <div class="preco" id="res-avista">—</div>
+      </div>
+      <div class="economia" id="res-economia">Economia de —</div>
+    </div>
+
+    <!-- Prazos -->
+    <div id="prazos-section">
+      <p class="prazos-title">Opções de Parcelamento</p>
+      <div class="prazos-grid" id="prazos-grid"></div>
+
+      <div class="nota-final">
+        <strong>Como funciona:</strong> Preço à vista: R$ 125/m². Preço parcelado: R$ 155/m².
+        O desconto nos juros é proporcional ao valor de entrada acima de R$ 25.000 —
+        quanto maior a entrada, menor o saldo financiado.
+        Valores sujeitos a confirmação. Simulação com fins informativos.
+      </div>
+    </div>
+  </div>
+
+  <!-- EMPTY STATE -->
+  <div class="empty-state" id="empty-state">
+    <div class="icon">🌿</div>
+    <p>Selecione a quadra e o lote para ver<br>as condições de pagamento</p>
+  </div>
+
+</div>
+
+<!-- FOOTER -->
+<div class="footer">
+  <strong>Tríade Empreendimentos Ltda</strong> · Angatuba / SP · Decreto Municipal 676/2022<br>
+  Simulação com fins informativos. Condições válidas para o período de lançamento.
+</div>
+
+<script>
+// ── DADOS ──────────────────────────────────────────────────────────────────
+const LOTES = {
+  A:[
+    {n:1,  area:1005.14, frente:50, obs:"Esquina"},
+    {n:2,  area:1000.00, frente:50, obs:""},
+    {n:3,  area:1000.00, frente:50, obs:""},
+    {n:4,  area:1000.00, frente:50, obs:""},
+    {n:5,  area:1000.00, frente:50, obs:""},
+    {n:6,  area:1000.00, frente:50, obs:""},
+    {n:7,  area:1000.00, frente:50, obs:""},
+    {n:8,  area:1004.48, frente:50, obs:"Esquina"},
+  ],
+  B:[
+    {n:1,  area:1013.81, frente:50, obs:"Esquina"},
+    {n:2,  area:1000.00, frente:50, obs:""},{n:3,  area:1000.00, frente:50, obs:""},
+    {n:4,  area:1000.00, frente:50, obs:""},{n:5,  area:1000.00, frente:50, obs:""},
+    {n:6,  area:1000.00, frente:50, obs:""},{n:7,  area:1000.00, frente:50, obs:""},
+    {n:8,  area:1000.00, frente:50, obs:""},{n:9,  area:1000.00, frente:50, obs:""},
+    {n:10, area:1000.00, frente:50, obs:""},{n:11, area:1000.00, frente:50, obs:""},
+    {n:12, area:1000.00, frente:50, obs:""},{n:13, area:1000.00, frente:50, obs:""},
+    {n:14, area:1000.00, frente:50, obs:""},{n:15, area:1000.00, frente:50, obs:""},
+    {n:16, area:1000.00, frente:50, obs:""},{n:17, area:1000.00, frente:50, obs:""},
+    {n:18, area:1000.00, frente:50, obs:""},
+    {n:19, area:1004.48, frente:50, obs:"Esquina"},
+  ],
+  C:[
+    {n:1,  area:1319.20, frente:50.00, obs:"Esquina"},
+    {n:2,  area:1375.36, frente:51.47, obs:""},
+    {n:3,  area:1315.00, frente:51.47, obs:""},
+    {n:4,  area:1300.00, frente:50.00, obs:""},
+    {n:5,  area:1000.00, frente:50, obs:""},{n:6,  area:1000.00, frente:50, obs:""},
+    {n:7,  area:1000.00, frente:50, obs:""},{n:8,  area:1000.00, frente:50, obs:""},
+    {n:9,  area:1000.00, frente:50, obs:""},{n:10, area:1000.00, frente:50, obs:""},
+    {n:11, area:1000.00, frente:50, obs:""},{n:12, area:1000.00, frente:50, obs:""},
+    {n:13, area:1000.00, frente:50, obs:""},{n:14, area:1000.00, frente:50, obs:""},
+    {n:15, area:1000.00, frente:50, obs:""},{n:16, area:1000.00, frente:50, obs:""},
+    {n:17, area:1000.00, frente:50, obs:""},{n:18, area:1000.00, frente:50, obs:""},
+    {n:19, area:1000.00, frente:50, obs:""},{n:20, area:1000.00, frente:50, obs:""},
+    {n:21, area:1000.00, frente:50, obs:""},{n:22, area:1000.00, frente:50, obs:""},
+    {n:23, area:1000.00, frente:50, obs:""},
+    {n:24, area:1014.00, frente:50, obs:"Esquina"},
+  ],
+  D:[
+    {n:1,  area:1673.54, frente:50, obs:"Esquina"},
+    {n:2,  area:1400.00, frente:50, obs:""},
+    {n:3,  area:1000.00, frente:50, obs:""},{n:4,  area:1000.00, frente:50, obs:""},
+    {n:5,  area:1000.00, frente:50, obs:""},{n:6,  area:1000.00, frente:50, obs:""},
+    {n:7,  area:1000.00, frente:50, obs:""},{n:8,  area:1000.00, frente:50, obs:""},
+    {n:9,  area:1000.00, frente:50, obs:""},{n:10, area:1000.00, frente:50, obs:""},
+    {n:11, area:1000.00, frente:50, obs:""},{n:12, area:1000.00, frente:50, obs:""},
+    {n:13, area:1000.00, frente:50, obs:""},{n:14, area:1000.00, frente:50, obs:""},
+    {n:15, area:1000.00, frente:50, obs:""},{n:16, area:1000.00, frente:50, obs:""},
+    {n:17, area:1000.00, frente:50, obs:""},{n:18, area:1000.00, frente:50, obs:""},
+    {n:19, area:1000.00, frente:50, obs:""},
+    {n:20, area:1014.03, frente:50, obs:"Esquina"},
+  ],
+  E:[
+    {n:1,  area:1103.57, frente:46.05, obs:"Esquina"},
+    {n:2,  area:1194.52, frente:36.10, obs:""},
+    {n:3,  area:1000.00, frente:20,    obs:""},{n:4,  area:1000.00, frente:20, obs:""},
+    {n:5,  area:1000.00, frente:20,    obs:""},{n:6,  area:1000.00, frente:20, obs:""},
+    {n:7,  area:1000.00, frente:20,    obs:""},{n:8,  area:1000.00, frente:20, obs:""},
+    {n:9,  area:1304.73, frente:50,    obs:""},
+    {n:10, area:1322.48, frente:50,    obs:""},
+    {n:11, area:1000.00, frente:50,    obs:"Esquina"},
+  ],
+  F:[
+    {n:1,  area:1000, frente:20, obs:""},{n:2,  area:1000, frente:20, obs:""},
+    {n:3,  area:1000, frente:20, obs:""},{n:4,  area:1000, frente:20, obs:""},
+    {n:5,  area:1000, frente:20, obs:""},{n:6,  area:1000, frente:20, obs:""},
+    {n:7,  area:1000, frente:20, obs:""},{n:8,  area:1000, frente:20, obs:""},
+    {n:9,  area:1000, frente:20, obs:""},{n:10, area:1000, frente:20, obs:""},
+    {n:11, area:1000, frente:20, obs:""},{n:12, area:1000, frente:20, obs:""},
+    {n:13, area:1000, frente:20, obs:""},{n:14, area:1000, frente:20, obs:""},
+    {n:15, area:1000, frente:20, obs:""},{n:16, area:1000, frente:20, obs:""},
+    {n:17, area:1000, frente:20, obs:""},{n:18, area:1000, frente:20, obs:""},
+  ],
+  G:[
+    {n:1, area:1000, frente:50, obs:""},{n:2, area:1000, frente:50, obs:""},
+    {n:3, area:1000, frente:50, obs:""},{n:4, area:1000, frente:50, obs:""},
+    {n:5, area:1000, frente:50, obs:""},{n:6, area:1000, frente:50, obs:""},
+    {n:7, area:1000, frente:50, obs:""},
+  ],
+};
+
+// ── CONSTANTES ─────────────────────────────────────────────────────────────
+const PRAZOS   = [60, 72, 84, 96, 108, 125];
+const E_MIN    = 25000;
+const TAXA_AV  = 125; // R$/m² à vista
+const TAXA_PAR = 155; // R$/m² parcelado
+
+// ── STATE ──────────────────────────────────────────────────────────────────
+let loteAtual = null;
+
+// ── HELPERS ────────────────────────────────────────────────────────────────
+const fmtBRL = v => 'R$ ' + v.toLocaleString('pt-BR', {minimumFractionDigits:2, maximumFractionDigits:2});
+const fmtM2  = v => v.toLocaleString('pt-BR', {minimumFractionDigits:2, maximumFractionDigits:2}) + ' m²';
+const arred2 = v => Math.round(v * 100) / 100;
+
+function sanitizarEntrada(raw) {
+  // Remove tudo que não seja dígito ou ponto/vírgula decimal
+  const n = parseFloat(String(raw).replace(',', '.'));
+  return isNaN(n) ? 0 : Math.floor(n); // força inteiro — sem centavos na entrada
+}
+
+// ── EVENTOS ────────────────────────────────────────────────────────────────
+function onQuadra() {
+  const q    = document.getElementById('sel-quadra').value;
+  const selL = document.getElementById('sel-lote');
+
+  selL.innerHTML = '<option value="">— Lote —</option>';
+  selL.disabled  = true;
+  loteAtual      = null;
+
+  resetarResultado();
+
+  if (!q || !LOTES[q]) return;
+
+  LOTES[q].forEach(l => {
+    const o       = document.createElement('option');
+    o.value       = l.n;
+    o.textContent = `Lote ${l.n} — ${l.area.toLocaleString('pt-BR', {minimumFractionDigits:2})} m²${l.obs ? ' (' + l.obs + ')' : ''}`;
+    selL.appendChild(o);
+  });
+  selL.disabled = false;
+}
+
+function onLote() {
+  const q = document.getElementById('sel-quadra').value;
+  const rawVal = document.getElementById('sel-lote').value;
+  const n = parseInt(rawVal, 10);
+
+  if (!q || !rawVal || isNaN(n)) { resetarResultado(); loteAtual = null; return; }
+
+  loteAtual = (LOTES[q] || []).find(l => l.n === n) || null;
+  if (!loteAtual) return;
+
+  const av  = arred2(loteAtual.area * TAXA_AV);
+  const isEsp = loteAtual.area > 1050 || !!loteAtual.obs;
+
+  document.getElementById('info-area').textContent   = fmtM2(loteAtual.area);
+  document.getElementById('info-frente').textContent = loteAtual.frente.toLocaleString('pt-BR', {minimumFractionDigits:2}) + ' m';
+  document.getElementById('info-sit').innerHTML      = `<span class="badge ${isEsp ? 'especial' : 'padrao'}">${loteAtual.obs || 'Padrão'}</span>`;
+  document.getElementById('info-av').textContent     = fmtBRL(av);
+  document.getElementById('lote-info').classList.add('visible');
+
+  const inp   = document.getElementById('inp-entrada');
+  inp.disabled = false;
+  inp.min      = E_MIN;
+  inp.max      = av;
+  inp.value    = E_MIN;
+
+  document.getElementById('hint-entrada').innerHTML =
+    `Mínimo: <span>R$ 25.000</span> · Máximo: <span>${fmtBRL(av)}</span> (à vista)`;
+  document.getElementById('erro-entrada').classList.remove('visible');
+
+  calcular();
+}
+
+// ── CÁLCULO PRINCIPAL ──────────────────────────────────────────────────────
+function calcular() {
+  if (!loteAtual) return;
+
+  const raw    = document.getElementById('inp-entrada').value;
+  const entrada = sanitizarEntrada(raw);
+  const av      = arred2(loteAtual.area * TAXA_AV);
+  const par     = arred2(loteAtual.area * TAXA_PAR);
+  const juros   = arred2(par - av);
+
+  const erroEl  = document.getElementById('erro-entrada');
+
+  // Validação de intervalo
+  if (entrada < E_MIN || entrada > av) {
+    erroEl.textContent = entrada < E_MIN
+      ? `⚠ Entrada mínima: ${fmtBRL(E_MIN)}`
+      : `⚠ Entrada máxima: ${fmtBRL(av)} (preço à vista)`;
+    erroEl.classList.add('visible');
+    document.getElementById('resultado').classList.remove('visible');
+    document.getElementById('empty-state').style.display = 'block';
+    document.getElementById('desconto-badge').classList.remove('visible');
+    document.getElementById('avista-badge').classList.remove('visible');
+    return;
+  }
+  erroEl.classList.remove('visible');
+
+  // Caso: pagamento à vista (inclui tolerância de R$1 para arredondamento)
+  if (entrada >= av - 1) {
+    document.getElementById('desconto-badge').classList.remove('visible');
+    document.getElementById('avista-badge').classList.add('visible');
+    document.getElementById('res-avista').textContent   = fmtBRL(av);
+    document.getElementById('res-economia').textContent = `Economia de ${fmtBRL(juros)}`;
+    document.getElementById('prazos-section').style.display = 'none';
+    document.getElementById('empty-state').style.display    = 'none';
+    document.getElementById('resultado').classList.add('visible');
+    return;
+  }
+
+  // Caso: parcelado
+  document.getElementById('avista-badge').classList.remove('visible');
+  document.getElementById('prazos-section').style.display = '';
+
+  // Desconto proporcional nos juros
+  const faixaMax  = av - E_MIN;
+  const proporcao = faixaMax > 0 ? (entrada - E_MIN) / faixaMax : 0;
+  const desconto  = arred2(proporcao * juros);
+  const saldo     = arred2(Math.max(0, par - entrada - desconto));
+  const totalPago = arred2(entrada + saldo);
+
+  // Badge desconto
+  const badge = document.getElementById('desconto-badge');
+  if (desconto > 0) {
+    document.getElementById('desc-val').textContent = fmtBRL(desconto);
+    badge.classList.add('visible');
+  } else {
+    badge.classList.remove('visible');
+  }
+
+  // À vista card
+  document.getElementById('res-avista').textContent   = fmtBRL(av);
+  document.getElementById('res-economia').textContent = `Economia de ${fmtBRL(juros)}`;
+
+  // Grid de prazos
+  const grid = document.getElementById('prazos-grid');
+  grid.innerHTML = '';
+  PRAZOS.forEach(p => {
+    const parc = arred2(saldo / p);
+    const div  = document.createElement('div');
+    div.className = 'prazo-card' + (p === 125 ? ' destaque' : '');
+    div.innerHTML = `
+      <div class="meses">${p} meses</div>
+      <div class="parcela">${fmtBRL(parc)}</div>
+      <div class="total">Total: ${fmtBRL(totalPago)}</div>
+      ${p === 125 ? '<div class="economia-prazo">✦ Menor parcela</div>' : ''}
+    `;
+    grid.appendChild(div);
+  });
+
+  document.getElementById('empty-state').style.display = 'none';
+  document.getElementById('resultado').classList.add('visible');
+}
+
+// ── RESET ──────────────────────────────────────────────────────────────────
+function resetarResultado() {
+  loteAtual = null;
+  document.getElementById('lote-info').classList.remove('visible');
+  document.getElementById('inp-entrada').disabled = true;
+  document.getElementById('inp-entrada').value    = '';
+  document.getElementById('hint-entrada').innerHTML = 'Selecione um lote para continuar';
+  document.getElementById('erro-entrada').classList.remove('visible');
+  document.getElementById('resultado').classList.remove('visible');
+  document.getElementById('desconto-badge').classList.remove('visible');
+  document.getElementById('avista-badge').classList.remove('visible');
+  document.getElementById('empty-state').style.display = 'block';
+  document.getElementById('prazos-section').style.display = '';
+}
+</script>
+</body>
+</html>
